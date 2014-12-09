@@ -212,19 +212,32 @@ void parse(){
 	int snd = 0,rcv = 0;
 #endif
 
+	/* GPU */
+	FILE *fp_gpu = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_clk","r");
+	int gpuFreq;
+	fgets(buff, 128, fp_gpu);
+	sscanf(buff,"%d",&gpuFreq);
+	fp_gpu = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_utilization","r");
+	int tmpGpuUtil;
+	double gpuUtil;
+	fgets(buff, 128, fp_gpu);
+	sscanf(buff,"%d",&tmpGpuUtil);
+	// The range of gpu's utilization [0:256]
+	gpuUtil = (double)tmpGpuUtil / (double)256;
+
 	/* output */
 	fprintf(fp_out, "%s,%d,%d", timeStr, cpu_on, curFreq);
 	for(i = 0; i < CPU_NUM; i++){
-		fprintf(fp_out, ",%llu,%.3f", curwork[i], util[i]);
+		fprintf(fp_out, ",%llu,%.4f", curwork[i], util[i]);
 	}
-	fprintf(fp_out, ",%llu,%llu,%d,%d,%d\n", processR, ctxt-lastCtxt,brightness,snd,rcv);
+	fprintf(fp_out, ",%llu,%llu,%d,%d,%d,%d,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil);
 	fclose(fp_out);
 #ifdef DEBUG	
 	printf("%s,%d,%d", timeStr, cpu_on, curFreq);
 	for(i = 0; i < CPU_NUM; i++){
-		printf(",%llu,%.3f", curwork[i], util[i]);
+		printf(",%llu,%.4f", curwork[i], util[i]);
 	}
-	printf(",%llu,%llu,%d,%d,%d\n", processR, ctxt-lastCtxt,brightness,snd,rcv);
+	printf(",%llu,%llu,%d,%d,%d,%d,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil);
 #endif
 	
 	
@@ -292,7 +305,7 @@ int main(int argc, char **argv)
 	for(i = 0; i < CPU_NUM; i++){
 		fprintf(fp_out, ",work_cycles%d,util%d", i, i);
 	}
-	fprintf(fp_out, ",proc_running,ctxt,brightness,snd,rcv\n");
+	fprintf(fp_out, ",proc_running,ctxt,brightness,snd,rcv,gpuFreq,gpuUtil\n");
 	fclose(fp_out);
 /*	
 	FILE *fp_thout = fopen("/sdcard/cuckoo_thprof.csv", "a");

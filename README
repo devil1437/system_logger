@@ -1,0 +1,21 @@
+IMPORTANT NOTE
+==============
+
+	1. The first row of output file isn't correct. Please ignore it.
+
+	2. When opening(closing) core, the working cycles and utilization isn't correct.
+
+
+
+OUTPUT FILE
+===========
+
+	1. cpu_on: The number of working CPU.
+	
+	2. curFreq: The running frequency of CPU. Unit: kHz.
+
+	3. work_cyclesX: The working cycle of X-th CPU. (Frequency * Utilization of X-th CPU).
+
+	4. utilX: The utilization of X-th CPU.
+
+	5. proc_running: 

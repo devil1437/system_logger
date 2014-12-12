@@ -1,0 +1,1 @@
+float getFrameRate(long utime);

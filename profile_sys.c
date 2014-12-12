@@ -7,6 +7,8 @@
 #include <termios.h>
 #include <time.h>
 
+#include "profile_frameRate.h"
+
 //#define ENABLE_NETWORK
 #define DEBUG
 
@@ -221,9 +223,11 @@ void parse(){
 	FILE *fp_gpuUtil = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_utilization","r");
 	fscanf(fp_gpuUtil, "%d", &tmpGpuUtil);
 	fclose(fp_gpuUtil);
-	
 	// The range of gpu's utilization [0:256]
 	gpuUtil = (double)tmpGpuUtil / (double)256;
+
+	/* frame rate */
+	float frameRate = getFrameRate(1000*1000);
 
 	/* output */
 	fprintf(fp_out, "%s,%d,%d", timeStr, cpu_on, curFreq);
@@ -238,7 +242,7 @@ void parse(){
 	for(i = 0; i < CPU_NUM; i++){
 		printf(",%llu,%.4f", curwork[i], util[i]);
 	}
-	printf(",%llu,%llu,%d,%d,%d,%d,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil);
+	printf(",%llu,%llu,%d,%d,%d,%d,%.4f, %.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil, frameRate);
 #endif
 	
 	
@@ -262,6 +266,10 @@ void parse(){
 		exit(0);
 	}
 }
+
+
+/**********************main**************************/
+
 
 int main(int argc, char **argv)
 {

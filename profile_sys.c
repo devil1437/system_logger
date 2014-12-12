@@ -55,7 +55,7 @@ double util[CPU_NUM];
 unsigned long long lastwork[CPU_NUM], workload[CPU_NUM];
 unsigned long long curwork[CPU_NUM];
 unsigned long long idle[CPU_NUM], lastidle[CPU_NUM];
-unsigned long long processR, ctxt, lastCtxt;
+unsigned long long processR, ctxt, lastCtxt, count;
 
 
 /**************** non-blocking input *************/
@@ -129,7 +129,9 @@ void parse(){
 	struct timeval tv;
 	time_t nowtime;
 	struct tm *nowtm;
-	char timeStr[256];
+	char timeStr[256] = "";
+	int gpuFreq = 0, tmpGpuUtil = 0;
+	double gpuUtil = 0;
 	/////////////////////////////////////////////
 	
 	FILE *fp_out = fopen(outfile_name, "a");
@@ -190,11 +192,11 @@ void parse(){
 	fclose(fp);
 
 	/* brightness */
-	FILE *fp_bl = fopen("/sys/class/backlight/panel/brightness","r");
 	int brightness;
-	fgets(buff, 128, fp_bl);
-	sscanf(buff,"%d",&brightness);
-
+	FILE *fp_bl = fopen("/sys/class/backlight/panel/brightness","r");	
+	fscanf(fp_bl, "%d", &brightness);
+	fclose(fp_bl);
+	
 #ifdef ENABLE_NETWORK
 	/* network */
 	char tcp_send[100];
@@ -204,24 +206,22 @@ void parse(){
 	FILE *fp_snd = fopen(tcp_send,"r");
 	FILE *fp_rcv = fopen(tcp_rcv,"r");
 	int snd,rcv;
-	fgets(buff, 128, fp_snd);
-	sscanf(buff,"%d",&snd);
-	fgets(buff, 128, fp_rcv);
-	sscanf(buff,"%d",&rcv);
+	fscanf(fp_snd, "%d", &snd);
+	fclose(fp_snd);
+	fscanf(fp_rcv, "%d", &rcv);
+	fclose(fp_rcv);
 #else
 	int snd = 0,rcv = 0;
 #endif
 
 	/* GPU */
-	FILE *fp_gpu = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_clk","r");
-	int gpuFreq;
-	fgets(buff, 128, fp_gpu);
-	sscanf(buff,"%d",&gpuFreq);
-	fp_gpu = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_utilization","r");
-	int tmpGpuUtil;
-	double gpuUtil;
-	fgets(buff, 128, fp_gpu);
-	sscanf(buff,"%d",&tmpGpuUtil);
+	FILE *fp_gpuFreq = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_clk","r");
+	fscanf(fp_gpuFreq, "%d", &gpuFreq);
+	fclose(fp_gpuFreq);
+	FILE *fp_gpuUtil = fopen("/sys/module/pvrsrvkm/parameters/sgx_gpu_utilization","r");
+	fscanf(fp_gpuUtil, "%d", &tmpGpuUtil);
+	fclose(fp_gpuUtil);
+	
 	// The range of gpu's utilization [0:256]
 	gpuUtil = (double)tmpGpuUtil / (double)256;
 
@@ -232,8 +232,9 @@ void parse(){
 	}
 	fprintf(fp_out, ",%llu,%llu,%d,%d,%d,%d,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil);
 	fclose(fp_out);
+
 #ifdef DEBUG	
-	printf("%s,%d,%d", timeStr, cpu_on, curFreq);
+	printf("%llu,%s,%d,%d", count++, timeStr, cpu_on, curFreq);
 	for(i = 0; i < CPU_NUM; i++){
 		printf(",%llu,%.4f", curwork[i], util[i]);
 	}
@@ -297,7 +298,7 @@ int main(int argc, char **argv)
 		idle[i] = 0;
 		lastidle[i] = 0;
 	}
-	ctxt = lastCtxt = 0;
+	ctxt = lastCtxt = count = 0;
 	
 	
 	FILE *fp_out = fopen(outfile_name, "w");

@@ -230,11 +230,11 @@ void parse(){
 	float frameRate = getFrameRate(1000*1000);
 
 	/* output */
-	fprintf(fp_out, "%s,%d,%d", timeStr, cpu_on, curFreq);
+	fprintf(fp_out, "%llu,%s,%d,%d", count, timeStr, cpu_on, curFreq);
 	for(i = 0; i < CPU_NUM; i++){
 		fprintf(fp_out, ",%llu,%.4f", curwork[i], util[i]);
 	}
-	fprintf(fp_out, ",%llu,%llu,%d,%d,%d,%d,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil);
+	fprintf(fp_out, ",%llu,%llu,%d,%d,%d,%d,%.4f,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil, frameRate);
 	fclose(fp_out);
 
 #ifdef DEBUG	
@@ -242,7 +242,7 @@ void parse(){
 	for(i = 0; i < CPU_NUM; i++){
 		printf(",%llu,%.4f", curwork[i], util[i]);
 	}
-	printf(",%llu,%llu,%d,%d,%d,%d,%.4f, %.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil, frameRate);
+	printf(",%llu,%llu,%d,%d,%d,%d,%.4f,%.4f\n", processR, ctxt-lastCtxt,brightness,snd,rcv, gpuFreq, gpuUtil, frameRate);
 #endif
 	
 	
@@ -310,11 +310,11 @@ int main(int argc, char **argv)
 	
 	
 	FILE *fp_out = fopen(outfile_name, "w");
-	fprintf(fp_out, "time,cpu_on,curFreq");
+	fprintf(fp_out, "count,time,cpu_on,curFreq");
 	for(i = 0; i < CPU_NUM; i++){
 		fprintf(fp_out, ",work_cycles%d,util%d", i, i);
 	}
-	fprintf(fp_out, ",proc_running,ctxt,brightness,snd,rcv,gpuFreq,gpuUtil\n");
+	fprintf(fp_out, ",proc_running,ctxt,brightness,snd,rcv,gpuFreq,gpuUtil,fps\n");
 	fclose(fp_out);
 /*	
 	FILE *fp_thout = fopen("/sdcard/cuckoo_thprof.csv", "a");
